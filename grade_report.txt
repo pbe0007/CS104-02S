@@ -1,0 +1,9 @@
+Paul                                     100.00
+Anabelle                                 80.00
+Marcus                                   79.00
+Henrietta                                89.00
+Marthampopulous the third                105.00
+Joe                                      83.00
+
+Class Average   89.33
+Grade:          B
