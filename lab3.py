@@ -7,7 +7,7 @@ reg_shift = sys.argv[1]
 try:
   reg_shift = int(sys.argv[1])
 except:
-  print(f"Error with Argument 1, {sys.argv[1]} is not a valid input. Integers only.")
+  print(f"""Error with Argument 1, ''{sys.argv[1]}'' is not a valid input. Integers only.""")
   sys.exit()
 
 ### catch if there are too many or too few arguments
