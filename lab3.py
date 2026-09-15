@@ -10,12 +10,18 @@ except:
   print(f"Error with Argument 1, {sys.argv[1]} is not a valid input. Integers only.")
   sys.exit()
 
+### catch if there are too many or too few arguments
+if len(sys.argv) > 3:
+  print(f"Remember, all arguments after '{sys.argv[2]}' are ignored. Put strings with spaces in quotes.")
+elif len(sys.argv) < 3:
+  print(f"put the cipher key in the first argument and the string to encode in the second argument")
+  sys.exit()
 ### set up both output strings and the input string
 message = sys.argv[2]
 encrypted = ""
 remessage = ""
 
-### encode/decode function
+### encode/decode function # enode means endcode or decode
 def coder(char, enode, shift):
   x = 1
   if enode == False:
@@ -30,11 +36,13 @@ def coder(char, enode, shift):
     #print(ord(char))
     return(char)
 
+# when the second input is true it runs the shift normally
 for char in message:
   encrypted += coder(char, True, reg_shift)
 
 print(f"\n{encrypted}")
 
+# when the second input is false it runs the shift backwards, essentially decoding the message.
 for char in encrypted:
   remessage += coder(char, False, reg_shift)
 
