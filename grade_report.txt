@@ -1,9 +1,10 @@
-Paul                                     100.00
-Anabelle                                 80.00
-Marcus                                   79.00
-Henrietta                                89.00
-Marthampopulous the third                105.00
-Joe                                      83.00
+Nathan                              80.00 B
+Susanna                             43.50 F
+Bart S                              66.33 D
+Jane                               100.00 A
+Mark                                88.00 B
+Larry                               98.10 A
+Max                                  2.00 F
 
-Class Average   89.33
-Grade:          B
+Class Average   68.28
+Grade                D
