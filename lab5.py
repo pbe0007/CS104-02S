@@ -43,9 +43,20 @@ def letter_grade(score):
     # catch if the score somehow is not within the range defined
     return("Error")
 
-
-def weighted_average(weights, sscores):
+# out_of 
+def weighted_average(weights, student_scores, out_of = 100):
     total = 0
+    # this goes through all of the scores a student has, and references the weights dict for weights. 
+    # This allows the weights dict to contain more assignment weights than strictly necessary
+    # which can be used for exempt assignments, for instance.
+    for assignments in student_scores:
+        # catch if the weights dictionary lacks the assignment
+        try:
+            total += weights[assignments] * student_scores[assignments]
+        except: 
+            print(f"error, {assignments} not in provided weight set")
+            return 0
+    return total / out_of
 
 
 ############## main #################
