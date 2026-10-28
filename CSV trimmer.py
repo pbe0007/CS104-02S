@@ -5,11 +5,11 @@ cs104_headers=[
     "highway08","comb08","fuelType",
     "atvType", "co2", "displ",
     "trany", "drive"]
-with open("vehicles.csv", "r", newline = '') as v, open("vehicles_cs104", "w", newline='') as w:
+with open("vehicles.csv", "r", newline = '') as v, open("trimmed_vehicles.csv", "w", newline='') as w:
     raw_data = csv.DictReader(v)
     writer = csv.DictWriter(w, cs104_headers)
     writer.writeheader()
-    print(raw_data.fieldnames)
+    # print(raw_data.fieldnames)
     for row in raw_data:
         new_row = {}
         for header in cs104_headers:
