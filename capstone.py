@@ -93,7 +93,7 @@ def stat_numerical(header, data = data_body):
 
 # similar format as stat_numerical, but for non-numeric things
 
-# currently implemented: num_blank, num_valued, unique_values, all_values
+# currently implemented: num_blank, num_valued, unique_values, num_unique_values, all_values
 def stat_holistic(header, data = data_body):
     index = stat_head_discriminator(header)
     output_dict = {}
@@ -111,6 +111,9 @@ def stat_holistic(header, data = data_body):
     ##### unique_values, a tuple of all unique values (not '')
     output_dict["unique_values"] = get_values(header, True, data)
 
+    ##### num_unique_values, the len of unique_values
+    output_dict["num_unique_values"] = len(output_dict["unique_values"])
+
     ##### all_values, a tuple of all values that are not ''
     output_dict["all_values"] = get_values(header, False, data)
 
@@ -120,11 +123,11 @@ def stat_holistic(header, data = data_body):
 # returns a new datastructure with the filter applied
 def data_filter(header, value, data = data_body):
     index = stat_head_discriminator(header)
-    output_struct = ()
+    output_struct = []
     for row in data:
         if row[index] == value:
-            output_struct.add(row)
-    return output_struct
+            output_struct.append(row)
+    return tuple(output_struct)
 
 # returns a dictionary with the unique values of header A as keys, and the specified statistical function
 # as dictionary values.  The statistical function runs across the values of header_b within data
@@ -132,19 +135,28 @@ def data_filter(header, value, data = data_body):
 def stat_correlation(header_a, header_b, stat, hol_o_num, data = data_body):
     output_dict = {}
     for unique in get_values(header_a, True, data):
-        with data_filter(header_a, unique, data) as filtered:
-            if hol_o_num == "num":
-                output_dict[unique] = stat_numerical(header_b, filtered).get(stat,default = "whoops, no value here")
-            else:
-                output_dict[unique] = stat_holistic(header_b, filtered).get(stat,default = "whoops, no value here")
+        filtered = data_filter(header_a, unique, data)
+        if hol_o_num == "num":
+            output_dict[unique] = stat_numerical(header_b, filtered).get(stat, "whoops, no value here")
+        else:
+            output_dict[unique] = stat_holistic(header_b, filtered).get(stat, "whoops, no value here")
     return output_dict
 
 ############### MAIN #####################
 year_stats = stat_numerical("year") 
 
-print(f"The number of vehicles is: {stat_count("id")}")
+print(f"The number of vehicles is: {len(get_values("id"))}")
 print(f"The range of years is: {year_stats["range"][0]:.0f} to {year_stats["range"][1]:.0f}")
-print(f"The number of car manufacturers is: {stat_count("make",True)}")
+print(f"The number of car manufacturers is: {len(get_values("make",True))}")
+temp = stat_correlation("make", "model", "num_unique_values", "hol")
+# print(temp)
+temp2 = max(temp.values())
+temp3 = ""
+for key in temp:
+    if temp[key] == temp2:
+        temp3 = key
+        continue
+print(f"The most productive manufacturer is: {temp3}")
 
 
 # print(data_header)
