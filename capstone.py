@@ -36,7 +36,7 @@ def load_vehicle_data(filename):
     # through the data to make statistics, and they don't need to be mutable
     return (indeces,tuple(new_set[1:]))
 
-data_header, data_body = load_vehicle_data(make_csv("vehicles.csv"))
+data_header, data_body = dict, tuple
 
 def stat_head_discriminator(thing):
     if type(thing) == str:
@@ -60,42 +60,53 @@ def get_values(header, unique = False, data = data_body):
                 temp_list.append(row[index])
         return tuple(temp_list)
 
-# this function takes a header and returns a dictionary with various statistical
-# figures based on that column
 
+
+# returns a tuple (number of filled entries, number of empty)
+def stat_num_valued(header, data = data_body):
+    index = stat_head_discriminator(header)
+    empty = 0
+    filled = 0
+    ##### num_blank and num_valued
+    for row in data:
+        if row[index] == '':
+            empty += 1
+        else:
+            filled += 1
+    return tuple((filled,empty))
+
+def stat_num_unique(header, data = data_body):
+    index = stat_head_discriminator(header)
+    return len(get_values(header, True, data))
+
+def stat_average(header, skip = True, data = data_body):
+    index = stat_head_discriminator(header)
+    sum = 0
+    count = 0
+    for row in data:
+        if not skip:
+            count += 1
+        if type(row[index]) in (int,float):
+            if skip:
+                count += 1
+            sum += row[index]
+    return sum / count
+
+
+
+# this function takes a header and a dataset and returns a dict full of various statistics about it
 # currently implemented: range || num_blank, num_valued, unique_values, num_unique_values, all_values
 def stats(header, data = data_body):
-    index = stat_head_discriminator(header)
     output_dict = {}
-    numbers = []
-    # get all the numbers
-    for row in data:
-        if row[index] != '':
-            try:
-                numbers.append(float(row[index]))
-            except ValueError:
-                continue
-    # catch if there are no numbers
-    if numbers == []:
-        # print(f"""The column:'{header}' does not have any numbers for stats!""")
-        numbers = [0]
-    numbers.sort()
 
     ##### range, a tuple in form (min, max)
     output_dict["range"] = tuple((min(numbers),max(numbers)))
 
     ########## non-numerical statistics
 
-    temp1 = 0
-    temp2 = 0
-    ##### num_blank and num_valued
-    for row in data:
-        if row[index] == '':
-            temp1 += 1
-        else:
-            temp2 += 1
-    output_dict["num_blank"] = temp1
-    output_dict["num_valued"] = temp2
+    temp1 = stat_num_valued(header,data)
+    output_dict["num_blank"] = temp1[1]
+    output_dict["num_valued"] = temp1[0]
 
     ##### unique_values, a tuple of all unique values (not '')
     output_dict["unique_values"] = get_values(header, True, data)
@@ -187,7 +198,58 @@ def stat_correlation(header_a, header_b, stat, data = data_body):
         output_dict[unique] = stats(header_b, filtered).get(stat, "whoops, no value here")
     return output_dict
 
+# main interactive menu, can be called again if the user wants to run through the process again.
+# returns items to be printed.
+
+# behavior:
+# 1 asks the user what to do, narrow data range, get average, mean, med, mode, etc
+# 2 does so, prints whatever stat plus the length of the current data length
+# 2.1 the user can repeat these, if it is a function that narrows the data, this will persist. return to 1 with modified settings
+# 2.2 the user can return to baseline, return to 1 with original settings
+# 3 the user can choose to print
+def menu(data = data_body, context = {"Filename":"None","Filters":[]}):
+    temp = ''
+    if len(context["Filters"]) != 0:
+        temp += "that is "
+    for i in range(len(context["Filters"])):
+        if
+    print(f"""
+Considering data from {context["Filename"]} {}
+""")
+
+
 ############### MAIN #####################
+if __name__ == "__main__":
+    # 0 if the user did not provide a file on initialization, it will ask for one
+    try:
+        data_header, data_body = load_vehicle_data(make_csv(sys.argv[1]))
+    except IndexError:
+        print("No argument passed, please input a valid filename")
+        stuck = True
+        temp = ""
+        while stuck:
+            try:
+                data_header, data_body = load_vehicle_data(make_csv(input(temp)))
+                stuck = False
+            except FileNotFoundError:
+                temp = "Invalid name, try again \n"
+    except FileNotFoundError:
+        print("The filename passed wasn't found!")
+        stuck = True
+        temp = ""
+        while stuck:
+            try:
+                data_header, data_body = load_vehicle_data(make_csv(input(temp)))
+                stuck = False
+            except FileNotFoundError:
+                temp = "Invalid name, try again \n"
+    except:
+        print("unknown error")
+
+    menu_out = menu()
+
+
+
 year_stats = stats("year") 
 
 print(f"The number of vehicles is: {len(get_values("id"))}")
