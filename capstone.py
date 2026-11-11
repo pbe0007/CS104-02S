@@ -44,7 +44,7 @@ def stat_head_discriminator(thing):
     if type(thing) == int:
         return thing
     else:
-        sys.exit(f"Error: {thing} is of type {type(thing)}, which is not valid.")
+        sys.exit(f"Error: {thing} is of type {type(thing)}, which is not a valid column id (header)")
 
 def get_values(header, unique = False, data = data_body):
     index = stat_head_discriminator(header)
@@ -63,8 +63,8 @@ def get_values(header, unique = False, data = data_body):
 # this function takes a header and returns a dictionary with various statistical
 # figures based on that column
 
-# currently implemented: range, entry_num
-def stat_numerical(header, data = data_body):
+# currently implemented: range || num_blank, num_valued, unique_values, num_unique_values, all_values
+def stats(header, data = data_body):
     index = stat_head_discriminator(header)
     output_dict = {}
     numbers = []
@@ -77,22 +77,43 @@ def stat_numerical(header, data = data_body):
                 continue
     # catch if there are no numbers
     if numbers == []:
-        print(f"""The column:'{header}' does not have any numbers for stats!""")
+        # print(f"""The column:'{header}' does not have any numbers for stats!""")
         numbers = [0]
     numbers.sort()
 
     ##### range, a tuple in form (min, max)
     output_dict["range"] = tuple((min(numbers),max(numbers)))
 
-    ##### entry_num, the number of non-blank entries for this header
-    output_dict["entry_num"] = len(numbers)
+    ########## non-numerical statistics
+
+    temp1 = 0
+    temp2 = 0
+    ##### num_blank and num_valued
+    for row in data:
+        if row[index] == '':
+            temp1 += 1
+        else:
+            temp2 += 1
+    output_dict["num_blank"] = temp1
+    output_dict["num_valued"] = temp2
+
+    ##### unique_values, a tuple of all unique values (not '')
+    output_dict["unique_values"] = get_values(header, True, data)
+
+    ##### num_unique_values, the len of unique_values
+    output_dict["num_unique_values"] = len(output_dict["unique_values"])
+
+    ##### all_values, a tuple of all values that are not ''
+    output_dict["all_values"] = get_values(header, False, data)
 
 
-    return output_dict
-   
+    return output_dict   
+
+
 
 # similar format as stat_numerical, but for non-numeric things
-
+### defunct
+"""
 # currently implemented: num_blank, num_valued, unique_values, num_unique_values, all_values
 def stat_holistic(header, data = data_body):
     index = stat_head_discriminator(header)
@@ -119,37 +140,61 @@ def stat_holistic(header, data = data_body):
 
 
     return output_dict
+"""
 
-# returns a new datastructure with the filter applied
+# returns a new datastructure that satisfies the value condition in the specified column (header), value should be a tuple,
+# A tuple with exactly two integers (or strings) is treated like a range (small, big). A tuple starting with "$%Exp%$", 
+# then ">" or "<" and then a number(or string, if wanting to sort alphabetically)
+# specifies the corresponding relationship. For more complex relationships, nest data_filter calls
 def data_filter(header, value, data = data_body):
     index = stat_head_discriminator(header)
     output_struct = []
-    for row in data:
-        if row[index] == value:
-            output_struct.append(row)
-    return tuple(output_struct)
+    if value[0] == "$%Exp%$":
+        if value[1] == "<":
+            for row in data:
+                if row[index] <= value[2]:
+                    output_struct.append(row)
+            return tuple(output_struct)
+        elif value[1] == ">":
+            for row in data:
+                if row[index] >= value[2]:
+                    output_struct.append(row)
+            return tuple(output_struct)
+        else:
+            try:
+                for row in data:
+                    if row[index] >= value[1] and row[index] <= value[2]:
+                        output_struct.append(row)
+                return tuple(output_struct)
+            except:
+                return("Invalid Value")
+    else:
+        for row in data:
+            if row[index] in value:
+                output_struct.append(row)
+        return tuple(output_struct)
+
+
+
 
 # returns a dictionary with the unique values of header A as keys, and the specified statistical function
 # as dictionary values.  The statistical function runs across the values of header_b within data
 # hol_o_num indicates whether to call stat_holistic or stat_numerical
-def stat_correlation(header_a, header_b, stat, hol_o_num, data = data_body):
+def stat_correlation(header_a, header_b, stat, data = data_body):
     output_dict = {}
     for unique in get_values(header_a, True, data):
         filtered = data_filter(header_a, unique, data)
-        if hol_o_num == "num":
-            output_dict[unique] = stat_numerical(header_b, filtered).get(stat, "whoops, no value here")
-        else:
-            output_dict[unique] = stat_holistic(header_b, filtered).get(stat, "whoops, no value here")
+        output_dict[unique] = stats(header_b, filtered).get(stat, "whoops, no value here")
     return output_dict
 
 ############### MAIN #####################
-year_stats = stat_numerical("year") 
+year_stats = stats("year") 
 
 print(f"The number of vehicles is: {len(get_values("id"))}")
 print(f"The range of years is: {year_stats["range"][0]:.0f} to {year_stats["range"][1]:.0f}")
 print(f"The number of car manufacturers is: {len(get_values("make",True))}")
-temp = stat_correlation("make", "model", "num_unique_values", "hol")
-# print(temp)
+temp = stat_correlation("make", "model", "num_unique_values")
+#print(temp)
 temp2 = max(temp.values())
 temp3 = ""
 for key in temp:
